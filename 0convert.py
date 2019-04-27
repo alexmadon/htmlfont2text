@@ -60,7 +60,7 @@ def popfont(content):
     if ff:
         fonts.pop()
     
-def printcontent(content):
+def printcontent(content,transtables):
     xx="printcontent"
     if len(fonts)>0:
         thefont=fonts[-1]
@@ -81,23 +81,38 @@ def printcontent(content):
         print(txt,sep='',end='')
 
 
-def go_deep(start,depth):
+def go_deep(start,transtables,depth):
     xx="go_deep"
     i=0
     for content in start.contents:
         if isinstance(content,bs4.NavigableString):
-            printcontent(content)
+            printcontent(content,transtables)
         else:
             debug(xx,"content",depth,i,content.name,content.attrs)
             pushfont(content)
-            go_deep(content,depth+1)
+            go_deep(content,transtables,depth+1)
             popfont(content)
             debug(xx,"tag",content.name)
             if content.name=="div":
                 print() # print a newline
         i=i+1
         
+def convert_html2txt(htmlfile,transdata,verbose):
+    """
+    Main function to call
+    """
+    # DO NOT DELETE DEFAULT
+    # get the transtables fro the transdata
+    transtables={}
+    for key,value in transdata.items():
+        transtables[key]=str.maketrans(value)
 
+    body=loadhtmlfile(htmlfile)
+    go_deep(body,transtables,0)
+
+
+
+    
 def parse_cli():
     xx="parse_cli"
     parser = argparse.ArgumentParser(description="""Translates characters in HTMP fonts
@@ -109,8 +124,11 @@ def parse_cli():
     debug(xx,"opts:",opts)
     return opts
 
-    
 
+# ==============================================
+"""
+Define your transdata
+"""
 # DO NOT DELETE DEFAULT
 transdata={}
 
@@ -174,19 +192,11 @@ transdata['ff1a']=transdata['ff17']
 transdata['ff1b']={
     ' ':'',
 }
-global transtables
 
-
-
-# DO NOT DELETE DEFAULT
-transtables={}
-for key,value in transdata.items():
-    transtables[key]=str.maketrans(value)
-
-
-
+    
+    
 if __name__ == "__main__":
     opts=parse_cli()
     verbose=opts.verbose
-    body=loadhtmlfile(opts.filename)
-    go_deep(body,0)
+    htmlfile=opts.filename
+    convert_html2txt(htmlfile,transdata,verbose)
