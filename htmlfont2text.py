@@ -60,7 +60,7 @@ def popfont(content):
     if ff:
         fonts.pop()
     
-def printcontent(content,transtables):
+def printcontent(content,verbose,transtables):
     xx="printcontent"
     if len(fonts)>0:
         thefont=fonts[-1]
@@ -81,16 +81,16 @@ def printcontent(content,transtables):
         print(txt,sep='',end='')
 
 
-def go_deep(start,transtables,depth):
+def go_deep(start,verbose,transtables,depth):
     xx="go_deep"
     i=0
     for content in start.contents:
         if isinstance(content,bs4.NavigableString):
-            printcontent(content,transtables)
+            printcontent(content,verbose,transtables)
         else:
             debug(xx,"content",depth,i,content.name,content.attrs)
             pushfont(content)
-            go_deep(content,transtables,depth+1)
+            go_deep(content,verbose,transtables,depth+1)
             popfont(content)
             debug(xx,"tag",content.name)
             if content.name=="div":
@@ -108,7 +108,7 @@ def convert_html2txt(htmlfile,transdata,verbose):
         transtables[key]=str.maketrans(value)
 
     body=loadhtmlfile(htmlfile)
-    go_deep(body,transtables,0)
+    go_deep(body,verbose,transtables,0)
 
 
 
