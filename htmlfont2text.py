@@ -33,7 +33,7 @@ def loadhtmlfile(filename):
     return body
 
 fonts=[]
-
+isbold=False
 
 def get_font_from_attrs(attrs):
     xx="get_font_from_attrs"
@@ -60,8 +60,9 @@ def popfont(content):
     if ff:
         fonts.pop()
     
-def printcontent(content,verbose,transtables):
+def printcontent(content,verbose,transtables,bolds,beginend):
     xx="printcontent"
+    global isbold
     if len(fonts)>0:
         thefont=fonts[-1]
     else:
@@ -72,6 +73,21 @@ def printcontent(content,verbose,transtables):
         thetable=thefont
     else:
         thetable="default"
+
+    # now the bold
+    if isbold:
+        if thefont in bolds:
+            pass
+        else:
+            print(beginend[1],sep='',end='') # } ｠
+            isbold=False
+    else:
+        if thefont in bolds:
+            isbold=True
+            print(beginend[0],sep='',end='') # { ｟
+        else:
+            pass
+
         
     txt=content    
     txt=txt.translate(transtables[thetable])
@@ -81,23 +97,23 @@ def printcontent(content,verbose,transtables):
         print(txt,sep='',end='')
 
 
-def go_deep(start,verbose,transtables,depth):
+def go_deep(start,verbose,bolds,beginend,transtables,depth):
     xx="go_deep"
     i=0
     for content in start.contents:
         if isinstance(content,bs4.NavigableString):
-            printcontent(content,verbose,transtables)
+            printcontent(content,verbose,transtables,bolds,beginend)
         else:
             debug(xx,"content",depth,i,content.name,content.attrs)
             pushfont(content)
-            go_deep(content,verbose,transtables,depth+1)
+            go_deep(content,verbose,bolds,beginend,transtables,depth+1)
             popfont(content)
             debug(xx,"tag",content.name)
             if content.name=="div":
                 print() # print a newline
         i=i+1
         
-def convert_html2txt(htmlfile,transdata,verbose):
+def convert_html2txt(htmlfile,transdata,verbose,bolds,beginend):
     """
     Main function to call
     """
@@ -108,7 +124,7 @@ def convert_html2txt(htmlfile,transdata,verbose):
         transtables[key]=str.maketrans(value)
 
     body=loadhtmlfile(htmlfile)
-    go_deep(body,verbose,transtables,0)
+    go_deep(body,verbose,bolds,beginend,transtables,0)
 
 
 
